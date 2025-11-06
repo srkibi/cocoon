@@ -74,15 +74,15 @@ void putchar(char c) {
     get_cursor_position(&x, &y);
 
     if (c == '\n') {
-        x = 0;
-        y++;
-        if (y >= VGA_HEIGHT) {
-            y = VGA_HEIGHT - 1;
-            scroll_screen();
-        }
-        set_cursor_xy(x, y);
-        return;
-    }
+       cursor_x = 0;
+       cursor_y++;
+       if (cursor_y >= VGA_HEIGHT) {
+           scroll_screen();
+           cursor_y = VGA_HEIGHT - 1;
+       }
+       set_cursor_xy(cursor_x, cursor_y);
+       return;
+   }
 
     vga_put_char_at(c, x, y);
     x++;
