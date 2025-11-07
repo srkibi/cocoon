@@ -75,8 +75,8 @@ void putchar(char c) {
         x = 0;
         y++;
         if (y >= VGA_HEIGHT) {
-            scroll_screen();
             y = VGA_HEIGHT - 1;
+            scroll_screen();
         }
         set_cursor_xy(x, y);
 
@@ -92,7 +92,6 @@ void putchar(char c) {
         x = 0;
         y++;
         if (y >= VGA_HEIGHT) {
-            scroll_screen();
             y = VGA_HEIGHT - 1;
         }
     }
