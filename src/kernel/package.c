@@ -44,7 +44,7 @@ void pkg_init() {
     pkg->installed = 1;
     strcpy(pkg->content, "Basic system utilities");
     
-    puts("✅ Package system initialized\n");
+    //puts("✅ Package system initialized\n");
 }
 
 int pkg_install(const char *pkg_name) {

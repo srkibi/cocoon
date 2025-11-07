@@ -248,7 +248,7 @@ static void redraw_command_line() {
 
 void terminal_prompt() {
     set_color(vga_entry_color(VGA_LIGHT_GREEN, VGA_BLACK));
-    puts("\n>");
+    //puts("\n>");
 
     get_cursor_position(&prompt_start_x, &prompt_start_y);
 
