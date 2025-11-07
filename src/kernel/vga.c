@@ -50,14 +50,12 @@ void set_cursor_xy(int x, int y) {
 }
 
 void scroll_screen() {
-    // Mover todas as linhas para cima
     for (int y = 1; y < HEIGHT; y++) {
         for (int x = 0; x < WIDTH; x++) {
             video_memory[(y - 1) * WIDTH + x] = video_memory[y * WIDTH + x];
         }
     }
     
-    // Limpar a última linha
     for (int x = 0; x < WIDTH; x++) {
         video_memory[(HEIGHT - 1) * WIDTH + x] = (uint16_t)' ' | (uint16_t)current_color << 8;
     }
@@ -74,15 +72,19 @@ void putchar(char c) {
     get_cursor_position(&x, &y);
 
     if (c == '\n') {
-       cursor_x = 0;
-       cursor_y++;
-       if (cursor_y >= VGA_HEIGHT) {
-           scroll_screen();
-           cursor_y = VGA_HEIGHT - 1;
-       }
-       set_cursor_xy(cursor_x, cursor_y);
-       return;
-   }
+        x = 0;
+        y++;
+        if (y >= VGA_HEIGHT) {
+            scroll_screen();
+            y = VGA_HEIGHT - 1;
+        }
+        set_cursor_xy(x, y);
+
+        cursor_x = x;
+        cursor_y = y;
+
+        return;
+    }
 
     vga_put_char_at(c, x, y);
     x++;
@@ -90,11 +92,15 @@ void putchar(char c) {
         x = 0;
         y++;
         if (y >= VGA_HEIGHT) {
-            y = VGA_HEIGHT - 1;
             scroll_screen();
+            y = VGA_HEIGHT - 1;
         }
     }
+
     set_cursor_xy(x, y);
+
+    cursor_x = x;
+    cursor_y = y;
 }
 
 void update_cursor() {

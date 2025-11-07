@@ -17,7 +17,7 @@ static char current_path[MAX_PATH_LEN] = "/";
 
 static char command_history[HISTORY_SIZE][COMMAND_BUFFER_SIZE];
 static int history_count = 0;
-static int history_index = -1; // -1 indica que não estamos navegando no histórico
+static int history_index = -1;
 static int prompt_start_x = 0, prompt_start_y = 0;
 static char cursor_offset = 0;
 static int prompt_length = 0;
@@ -28,7 +28,6 @@ static void parse_command(char *cmd, char *argv[], int *argc) {
     int in_quotes = 0;
     
     while (*token && *argc < MAX_ARGS) {
-        // Pular espaços
         while (*token == ' ') token++;
         if (!*token) break;
         
@@ -37,17 +36,15 @@ static void parse_command(char *cmd, char *argv[], int *argc) {
             token++;
             argv[(*argc)++] = token;
             
-            // Encontrar fim das aspas
             while (*token && (*token != '"' || in_quotes)) {
                 if (*token == '\\' && *(token+1) == '"') {
-                    token++; // Pular escape
+                    token++;
                 }
                 token++;
             }
         } else {
             argv[(*argc)++] = token;
             
-            // Encontrar próximo espaço
             while (*token && *token != ' ') token++;
         }
         
@@ -58,7 +55,6 @@ static void parse_command(char *cmd, char *argv[], int *argc) {
     }
 }
 
-// Comando pkg (gerenciador de pacotes)
 void cmd_pkg(const char *args) {
     if (!args || strlen(args) == 0) {
         puts("\nCocoon OS Package Manager\n");
@@ -92,14 +88,12 @@ void cmd_pkg(const char *args) {
     }
 }
 
-// Comando wget
 void cmd_wget(const char *args) {
     if (!args || strlen(args) == 0) {
         wget_show_help();
         return;
     }
     
-    // Parse arguments: wget <url> <output>
     char *space = strchr(args, ' ');
     if (!space) {
         puts("Usage: wget <URL> <output file>\n");
@@ -113,25 +107,21 @@ void cmd_wget(const char *args) {
     wget_download(url, output_file);
 }
 
-// Função para obter a posição atual do cursor no texto
 static int get_cursor_text_position() {
     int x, y;
     get_cursor_position(&x, &y);
     return cursor_offset + (x - prompt_start_x);
 }
 
-// Função para definir posição do cursor no texto
 static void set_cursor_text_position(int text_pos) {
     if (text_pos < 0) text_pos = 0;
     if (text_pos > buffer_index) text_pos = buffer_index;
     
     cursor_offset = text_pos;
     
-    // Posição X começa após o prompt
     int x = prompt_start_x + prompt_length + text_pos;
     int y = prompt_start_y;
     
-    // Calcular quebra de linha se necessário
     while (x >= VGA_WIDTH) {
         x -= VGA_WIDTH;
         y++;
@@ -144,15 +134,12 @@ void clear_current_line() {
     int x, y;
     get_cursor_position(&x, &y);
     
-    // Voltar para o início do prompt
     set_cursor_xy(prompt_start_x, prompt_start_y);
     
-    // Limpar até o final da linha
     for (int i = prompt_start_x; i < VGA_WIDTH; i++) {
         putchar(' ');
     }
     
-    // Voltar para a posição inicial do prompt
     set_cursor_xy(prompt_start_x, prompt_start_y);
     cursor_offset = 0;
 }
@@ -160,7 +147,6 @@ void clear_current_line() {
 static void history_add(const char *command) {
     if (strlen(command) == 0) return;
     
-    // Não adicionar comandos duplicados consecutivos
     if (history_count > 0 && strcmp(command_history[history_count - 1], command) == 0) {
         return;
     }
@@ -169,7 +155,6 @@ static void history_add(const char *command) {
         strcpy(command_history[history_count], command);
         history_count++;
     } else {
-        // Shift do histórico quando estiver cheio
         for (int i = 1; i < HISTORY_SIZE; i++) {
             strcpy(command_history[i - 1], command_history[i]);
         }
@@ -187,7 +172,7 @@ static void history_prev() {
         history_index--;
     }
     
-    clear_current_line();  // Agora a função já foi declarada
+    clear_current_line();
     strcpy(command_buffer, command_history[history_index]);
     buffer_index = strlen(command_buffer);
     cursor_offset = buffer_index;
@@ -219,18 +204,14 @@ static void redraw_command_line() {
     int current_x, current_y;
     get_cursor_position(&current_x, &current_y);
     
-    // Voltar para o início da linha e redesenhar TUDO
     set_cursor_xy(prompt_start_x, prompt_start_y);
     
-    // Limpar a linha inteira
     for (int i = prompt_start_x; i < VGA_WIDTH; i++) {
         putchar(' ');
     }
-    
-    // Voltar e redesenhar o prompt E o comando
+
     set_cursor_xy(prompt_start_x, prompt_start_y);
     
-    // Redesenhar o prompt
     set_color(vga_entry_color(VGA_LIGHT_GREEN, VGA_BLACK));
     puts("cocoon@root:");
     set_color(vga_entry_color(VGA_LIGHT_BLUE, VGA_BLACK));
@@ -239,16 +220,13 @@ static void redraw_command_line() {
     puts("$ ");
     set_color(vga_entry_color(VGA_WHITE, VGA_BLACK));
     
-    // Redesenhar o comando
     puts(command_buffer);
     
-    // Restaurar posição do cursor
     set_cursor_text_position(cursor_offset);
 }
 
 void terminal_prompt() {
     set_color(vga_entry_color(VGA_LIGHT_GREEN, VGA_BLACK));
-    //puts("\n>");
 
     get_cursor_position(&prompt_start_x, &prompt_start_y);
 
@@ -258,7 +236,7 @@ void terminal_prompt() {
     puts(current_path);
     puts("$ ");
 
-    prompt_length = strlen("> cocoon@root:") + strlen(current_path) + 2;
+    prompt_length = strlen("cocoon@root:~") + strlen(current_path) + 2;
 
     set_color(vga_entry_color(VGA_WHITE, VGA_BLACK));
     input_enabled = 1;
@@ -756,7 +734,7 @@ void terminal_handle_input(char c) {
     if (c == '\n' || c == '\r') {
         putchar('\n');
         if (strlen(command_buffer) > 0) {
-            history_add(command_buffer);
+            //history_add(command_buffer);
         }
         terminal_execute_command();
     } else if (c == '\b') { // Backspace - deleta à esquerda
